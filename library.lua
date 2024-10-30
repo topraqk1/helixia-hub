@@ -1,4 +1,4 @@
-shiroVR/Eat-Blobs-Simulator/main/Script"))()-- Instances: 147 | Scripts: 0 | Modules: 1
+-- Instances: 147 | Scripts: 0 | Modules: 1
 
 
 local DRR = {};
