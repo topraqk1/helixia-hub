@@ -1,5 +1,5 @@
 local Rayfield = loadstring(game:HttpGet(
-"https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
+    "https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local plr = game.Players.LocalPlayer
@@ -58,7 +58,7 @@ MainTab:CreateButton({
         local HttpService = game:GetService("HttpService")
         local TeleportService = game:GetService("TeleportService")
         local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" ..
-        game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
+            game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
 
         for _, v in pairs(Servers) do
             if v.playing < v.maxPlayers then
@@ -127,7 +127,6 @@ UIS.JumpRequest:Connect(function()
 end)
 
 local GameTab = Window:CreateTab("Game", "crosshair")
-GameTab:CreateSection("Murder Mystery 2")
 
 local function getMurderer()
     for _, plr in ipairs(game.Players:GetPlayers()) do
@@ -147,25 +146,6 @@ local function getSheriff()
     return nil
 end
 
-local function createESP(player, color)
-    if not player.Character then return end
-    local head = player.Character:FindFirstChild("Head")
-    if not head or head:FindFirstChild("ESP") then return end
-
-    local esp = Instance.new("BillboardGui", head)
-    esp.Name = "ESP"
-    esp.Size = UDim2.new(0, 100, 0, 40)
-    esp.AlwaysOnTop = true
-    esp.StudsOffset = Vector3.new(0, 2, 0)
-
-    local label = Instance.new("TextLabel", esp)
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = player.Name
-    label.TextColor3 = color
-    label.TextScaled = true
-end
-
 local function getPlayerRole()
     local knife = plr.Backpack:FindFirstChild("Knife") or (plr.Character and plr.Character:FindFirstChild("Knife"))
     local gun = plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun"))
@@ -179,15 +159,65 @@ local function getPlayerRole()
     end
 end
 
+GameTab:CreateSection("Role Information")
+
 local RoleLabel = GameTab:CreateLabel("Your Role: Unknown")
+local SheriffLabel = GameTab:CreateLabel("Unknown")
+local MurdererLabel = GameTab:CreateLabel("Unknown")
 
 task.spawn(function()
     while true do
         local currentRole = getPlayerRole()
+        local Sheriff = getSheriff()
+        local Murderer = getMurderer()
+
         RoleLabel:Set("Your Role: " .. currentRole)
+        SheriffLabel:Set(Sheriff)
+        MurdererLabel:Set(Murderer)
         task.wait(1)
     end
 end)
+
+local function sendRoleInfoToChannels()
+    local textchannels = game:GetService("TextChatService"):WaitForChild("TextChannels"):GetChildren()
+    local murd = findMurderer()
+    local sher = findSheriff()
+
+    if not murd and not sher then
+        Rayfield:Notify({
+            Title = "Role Information",
+            Content = "The game hasn't started yet.",
+            Duration = 3
+        })
+    end
+
+    local murdName = "-"
+    local sherName = "-"
+    if murd then murdName = murd.Name end
+    if sher then sherName = sher.Name end
+    local message = string.format([[Murderer: %s |
+Sheriff: %s]], murdName, sherName)
+
+    for _, textchannel in ipairs(textchannels) do
+        if textchannel.Name == "RBXSystem" then
+            continue
+        end
+        textchannel:SendAsync(message)
+    end
+end
+
+MainTab:CreateButton({
+    Name = "Send Role Info to Chat",
+    Callback = function()
+        sendRoleInfoToChannels()
+        Rayfield:Notify({
+            Title = "Message Sent",
+            Content = "Role info sent to chat.",
+            Duration = 3
+        })
+    end
+})
+
 
 GameTab:CreateDivider()
 
@@ -202,32 +232,38 @@ function getMap()
     return nil
 end
 
-function getClosestModelToPlayer(player, models)
-    local closestModel = nil
-    local closestDistance = math.huge
+local gunDropNotificationEnabled = false
 
-    local playerPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and
-    player.Character.HumanoidRootPart.Position
-    if not playerPosition then return nil end
+GameTab:CreateToggle({
+    Name = "Gun Drop Notification",
+    CurrentValue = false,
+    Callback = function(Value)
+        gunDropNotificationEnabled = Value
+        Rayfield:Notify({
+            Title = "Gun Drop Notification",
+            Content = Value and "Enabled" or "Disabled",
+            Duration = 3
+        })
+    end,
+})
 
-    for _, model in ipairs(models) do
-        local modelPosition = model:GetPivot().Position
-        local distance = (modelPosition - playerPosition).Magnitude
-        if distance < closestDistance then
-            closestDistance = distance
-            closestModel = model
+task.spawn(function()
+    while task.wait(1) do
+        if gunDropNotificationEnabled then
+            local map = getMap()
+            if map and map:FindFirstChild("GunDrop") then
+                local gunDrop = map.GunDrop
+                if gunDrop and gunDrop:IsA("Model") then
+                    Rayfield:Notify({
+                        Title = "Gun Dropped",
+                        Content = "A gun has been dropped! Find it on the map.",
+                        Duration = 3
+                    })
+                end
+            end
         end
     end
-
-    local returningResult = { closestModel, closestDistance }
-    setmetatable(returningResult, {
-        __tostring = function(t)
-            return closestModel
-        end,
-    })
-
-    return returningResult
-end
+end)
 
 GameTab:CreateToggle({
     Name = "Auto Collect Coins",
@@ -247,29 +283,18 @@ task.spawn(function()
         if not coinAutoCollect then continue end
 
         local map = getMap()
-        if map and map:FindFirstChild("CoinContainer") then
-            local coins = map.CoinContainer:GetChildren()
-            if #coins > 0 then
-                local result = getClosestModelToPlayer(plr, coins)
-                local closestCoin = result[1]
-                local distance = result[2]
-
-                if closestCoin and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = plr.Character.HumanoidRootPart
-                    local tween = TweenService:Create(hrp, TweenInfo.new(distance * 0.05, Enum.EasingStyle.Linear), {
-                        CFrame = closestCoin:GetPivot()
-                    })
-                    tween:Play()
-                    tween.Completed:Wait()
-
-                    task.wait(0.1)
-                    pcall(function() closestCoin:Destroy() end)
+        if map and map:FindFirstChild("CoinContainer") and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = plr.Character.HumanoidRootPart
+            for _, coin in ipairs(map.CoinContainer:GetChildren()) do
+                if coin:IsA("Model") then
+                    pcall(function()
+                        coin:PivotTo(hrp.CFrame)
+                    end)
                 end
             end
         end
     end
 end)
-
 
 GameTab:CreateButton({
     Name = "God Mode",
