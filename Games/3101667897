@@ -148,11 +148,11 @@ FarmTab:CreateToggle({
     Name = "Orb Farm",
     CurrentValue = false,
     Callback = function(Value)
-        _G.autoFarm = not _G.autoFarm
+        _G.autoFarm = Value
 
         while _G.autoFarm do
             collectOrb()
-            wait(0.1)
+            task.wait(0.1)
         end
     end
 })
