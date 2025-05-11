@@ -169,7 +169,7 @@ local FarmTab = Window:CreateTab("Auto Farm", "bolt")
 
 function collectOrb(orbColor, map)
     orbColor = orbColor or "Red"
-    map = map or "Magma City"
+    map = map or "City"
 
     local args = {
         "collectOrb",
