@@ -1,1 +1,158 @@
+local Rayfield = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local plr = game.Players.LocalPlayer
 
+_G.autoFarm = false
+
+local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown Game"
+
+local Window = Rayfield:CreateWindow({
+    Name = "Helixia Hub | " .. gameName,
+    Icon = "gamepad",
+    LoadingTitle = "Helixia Hub",
+    LoadingSubtitle = "discord.gg/JRzMYAWvUZ",
+    Theme = "Default",
+
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "HelixiaHub",
+        FileName = "Config"
+    },
+
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+
+    KeySystem = false,
+    KeySettings = {
+        Title = "Helixia Hub",
+        Subtitle = "Key System",
+        Note = "Anahtar almak için özel bilgi verilmemiş",
+        FileName = "Key",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = { "Hello" }
+    }
+})
+
+local MainTab = Window:CreateTab("Home", "home")
+MainTab:CreateSection("General")
+
+MainTab:CreateButton({
+    Name = "Rejoin Server",
+    Callback = function()
+        local ts = game:GetService("TeleportService")
+        local placeId = game.PlaceId
+        ts:Teleport(placeId, plr)
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Hop to New Server",
+    Callback = function()
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
+        local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" ..
+            game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
+
+        for _, v in pairs(Servers) do
+            if v.playing < v.maxPlayers then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, plr)
+                break
+            end
+        end
+    end,
+})
+
+local PlayerTab = Window:CreateTab("Player", "user")
+PlayerTab:CreateSection("Player Settings")
+
+local character = function() return plr.Character or plr.CharacterAdded:Wait() end
+
+PlayerTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = { 16, 250 },
+    Increment = 1,
+    CurrentValue = 16,
+    Flag = "Slider1",
+    Callback = function(Value)
+        character():WaitForChild("Humanoid").WalkSpeed = Value
+    end,
+})
+
+PlayerTab:CreateSlider({
+    Name = "Jump Power",
+    Range = { 50, 300 },
+    Increment = 5,
+    CurrentValue = 50,
+    Flag = "Slider1",
+    Callback = function(Value)
+        character():WaitForChild("Humanoid").JumpPower = Value
+    end,
+})
+
+local infiniteJumpEnabled = false
+
+PlayerTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Callback = function(Value)
+        infiniteJumpEnabled = Value
+        if infiniteJumpEnabled then
+            Rayfield:Notify({
+                Title = "Infinite Jump",
+                Content = "Enabled",
+                Duration = 3
+            })
+        else
+            Rayfield:Notify({
+                Title = "Infinite Jump",
+                Content = "Disabled",
+                Duration = 3
+            })
+        end
+    end,
+})
+
+local UIS = game:GetService("UserInputService")
+UIS.JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        character():WaitForChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+local GameTab = Window:CreateTab("Game", "crosshair")
+local FarmTab = Window:CreateTab("Auto Farm", "bolt")
+
+function collectOrb(map, orbColor)
+    map = map or "City"
+    orbColor = orbColor or "Red"
+
+    local args = {
+        "collectOrb",
+        orbColor .. " Orb",
+        map
+    }
+
+    game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvents"):FireServer(unpack(args))
+end
+
+FarmTab:CreateToggle({
+    Name = "Orb Farm",
+    CurrentValue = false,
+    Callback = function(Value)
+        _G.autoFarm = not _G.autoFarm
+
+        while _G.autoFarm do
+            collectOrb()
+            wait(0.1)
+        end
+    end
+})
