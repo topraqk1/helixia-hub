@@ -1,8 +1,9 @@
-local Rayfield = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local plr = game.Players.LocalPlayer
+
+local playerData = {}
 
 local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown Game"
 
@@ -130,19 +131,55 @@ local GameTab = Window:CreateTab("Game", "crosshair")
 
 local function getMurderer()
     for _, plr in ipairs(game.Players:GetPlayers()) do
-        if plr.Backpack:FindFirstChild("Knife") or (plr.Character and plr.Character:FindFirstChild("Knife")) then
+        if plr.Backpack:FindFirstChild("Knife") then
             return plr
         end
     end
+
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr.Character and plr.Character:FindFirstChild("Knife") then
+            return plr
+        end
+    end
+
+    if playerData then
+        for playerName, data in pairs(playerData) do
+            if data.Role == "Murderer" then
+                local plr = game.Players:FindFirstChild(playerName)
+                if plr then
+                    return plr
+                end
+            end
+        end
+    end
+
     return nil
 end
 
 local function getSheriff()
     for _, plr in ipairs(game.Players:GetPlayers()) do
-        if plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun")) then
+        if plr.Backpack:FindFirstChild("Gun") then
             return plr
         end
     end
+
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr.Character and plr.Character:FindFirstChild("Gun") then
+            return plr
+        end
+    end
+
+    if playerData then
+        for playerName, data in pairs(playerData) do
+            if data.Role == "Sheriff" then
+                local plr = game.Players:FindFirstChild(playerName)
+                if plr then
+                    return plr
+                end
+            end
+        end
+    end
+
     return nil
 end
 
