@@ -1,5 +1,4 @@
-local Rayfield = loadstring(game:HttpGet(
-"https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -56,8 +55,7 @@ MainTab:CreateButton({
     Callback = function()
         local HttpService = game:GetService("HttpService")
         local TeleportService = game:GetService("TeleportService")
-        local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" ..
-        game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
+        local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
 
         for _, v in pairs(Servers) do
             if v.playing < v.maxPlayers then
