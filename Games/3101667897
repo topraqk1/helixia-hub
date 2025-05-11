@@ -1,10 +1,11 @@
-local Rayfield = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local plr = game.Players.LocalPlayer
 
-_G.autoFarm = false
+_G.autoOrbFarm = false
+_G.autoGemFarm = false
+_G.autoRebirth = false
 
 local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown Game"
 
@@ -129,13 +130,46 @@ UIS.JumpRequest:Connect(function()
 end)
 
 local GameTab = Window:CreateTab("Game", "crosshair")
+
+local codes = {
+  "swiftjungle1000",
+  "speedchampion000",
+  "SPRINT250",
+  "hyper250",
+  "racer300",
+  "Launch200",
+  "sparkles300",
+  "legends500"
+}
+
+function useCode(code)
+	local args = {
+		code
+	}
+
+	game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("codeRemote"):InvokeServer(unpack(args))
+end
+
+GameTab:CreateButton({
+    Name = "Use All Codes",
+    Callback = function()
+        for _, code in ipairs(codes) do
+            useCode(code)
+            task.wait(0.3)
+        end
+        Rayfield:Notify({
+            Title = "Codes",
+            Content = "All codes used!",
+            Duration = 4
+        })
+    end
+})
+
 local FarmTab = Window:CreateTab("Auto Farm", "bolt")
 
-function collectOrb(map, orbColor)
-    map = map or "City"
+function collectOrb(orbColor, map)
     orbColor = orbColor or "Red"
-
-print(orbColor, map)
+    map = map or "Magma City"
 
     local args = {
         "collectOrb",
@@ -146,14 +180,64 @@ print(orbColor, map)
     game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer(unpack(args))
 end
 
+function collectGem(map)
+    map = map or "City"
+
+    local args = {
+        "collectOrb",
+        "Gem",
+        map
+    }
+
+    game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("orbEvent"):FireServer(unpack(args))
+end
+
+function rebirth()
+    local args = {
+	    "rebirthRequest"
+    }
+
+    game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthEvent"):FireServer(unpack(args))
+end
+
 FarmTab:CreateToggle({
     Name = "Orb Farm",
     CurrentValue = false,
     Callback = function(Value)
-        _G.autoFarm = Value
+        _G.autoOrbFarm = Value
 
-        while _G.autoFarm do
-            collectOrb()
+        while _G.autoOrbFarm do
+            for i = 1, 1000 do
+                collectOrb()
+            end
+            task.wait(0.1)
+        end
+    end
+})
+
+FarmTab:CreateToggle({
+    Name = "Gem Farm",
+    CurrentValue = false,
+    Callback = function(Value)
+        _G.autoGemFarm = Value
+
+        while _G.autoGemFarm do
+            for i = 1, 1000 do
+                collectGem()
+            end
+            task.wait(0.1)
+        end
+    end
+})
+
+FarmTab:CreateToggle({
+    Name = "Auto Rebirth",
+    CurrentValue = false,
+    Callback = function(Value)
+        _G.autoRebirth = Value
+
+        while _G.autoRebirth do
+            rebirth()
             task.wait(0.1)
         end
     end
