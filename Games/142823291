@@ -1,5 +1,4 @@
-local Rayfield = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local plr = game.Players.LocalPlayer
@@ -162,8 +161,8 @@ end
 GameTab:CreateSection("Role Information")
 
 local RoleLabel = GameTab:CreateLabel("Your Role: Unknown")
-local SheriffLabel = GameTab:CreateLabel("Unknown")
-local MurdererLabel = GameTab:CreateLabel("Unknown")
+local SheriffLabel = GameTab:CreateLabel("Sheriff: Unknown")
+local MurdererLabel = GameTab:CreateLabel("Murderer: Unknown")
 
 task.spawn(function()
     while true do
@@ -172,8 +171,8 @@ task.spawn(function()
         local Murderer = getMurderer()
 
         RoleLabel:Set("Your Role: " .. currentRole)
-        SheriffLabel:Set(Sheriff)
-        MurdererLabel:Set(Murderer)
+        SheriffLabel:Set("Sheriff: " .. Sheriff)
+        MurdererLabel:Set("Murderer: " .. Murderer)
         task.wait(1)
     end
 end)
