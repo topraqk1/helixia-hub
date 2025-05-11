@@ -207,7 +207,7 @@ FarmTab:CreateToggle({
         _G.autoOrbFarm = Value
 
         while _G.autoOrbFarm do
-            for i = 1, 1000 do
+            for i = 1, 100 do
                 collectOrb()
             end
             task.wait(0.1)
@@ -222,7 +222,7 @@ FarmTab:CreateToggle({
         _G.autoGemFarm = Value
 
         while _G.autoGemFarm do
-            for i = 1, 1000 do
+            for i = 1, 100 do
                 collectGem()
             end
             task.wait(0.1)
