@@ -135,6 +135,8 @@ function collectOrb(map, orbColor)
     map = map or "City"
     orbColor = orbColor or "Red"
 
+print(orbColor, map)
+
     local args = {
         "collectOrb",
         orbColor .. " Orb",
