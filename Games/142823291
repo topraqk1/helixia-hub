@@ -1,0 +1,291 @@
+local Rayfield = loadstring(game:HttpGet(
+"https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/Scripts/library.lua"))()
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown Game"
+
+local Window = Rayfield:CreateWindow({
+    Name = "Helixia Hub | " .. gameName,
+    Icon = "gamepad",
+    LoadingTitle = "Helixia Hub",
+    LoadingSubtitle = "discord.gg/JRzMYAWvUZ",
+    Theme = "Default",
+
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "HelixiaHub",
+        FileName = "Config"
+    },
+
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+
+    KeySystem = false,
+    KeySettings = {
+        Title = "Helixia Hub",
+        Subtitle = "Key System",
+        Note = "Anahtar almak için özel bilgi verilmemiş",
+        FileName = "Key",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = { "Hello" }
+    }
+})
+
+local MainTab = Window:CreateTab("Home", "home")
+MainTab:CreateSection("General")
+
+MainTab:CreateButton({
+    Name = "Rejoin Server",
+    Callback = function()
+        local ts = game:GetService("TeleportService")
+        local placeId = game.PlaceId
+        ts:Teleport(placeId, game.Players.plr)
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Hop to New Server",
+    Callback = function()
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
+        local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" ..
+        game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
+
+        for _, v in pairs(Servers) do
+            if v.playing < v.maxPlayers then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, game.Players.plr)
+                break
+            end
+        end
+    end,
+})
+
+local PlayerTab = Window:CreateTab("Player", "user")
+PlayerTab:CreateSection("Player Settings")
+
+local player = game.Players.plr
+local character = function() return player.Character or player.CharacterAdded:Wait() end
+
+PlayerTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = { 16, 250 },
+    Increment = 1,
+    CurrentValue = 16,
+    Flag = "Slider1",
+    Callback = function(Value)
+        character():WaitForChild("Humanoid").WalkSpeed = Value
+    end,
+})
+
+PlayerTab:CreateSlider({
+    Name = "Jump Power",
+    Range = { 50, 300 },
+    Increment = 5,
+    CurrentValue = 50,
+    Flag = "Slider1",
+    Callback = function(Value)
+        character():WaitForChild("Humanoid").JumpPower = Value
+    end,
+})
+
+local infiniteJumpEnabled = false
+
+PlayerTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Callback = function(Value)
+        infiniteJumpEnabled = Value
+        if infiniteJumpEnabled then
+            Rayfield:Notify({
+                Title = "Infinite Jump",
+                Content = "Enabled",
+                Duration = 3
+            })
+        else
+            Rayfield:Notify({
+                Title = "Infinite Jump",
+                Content = "Disabled",
+                Duration = 3
+            })
+        end
+    end,
+})
+
+local UIS = game:GetService("UserInputService")
+UIS.JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        character():WaitForChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+local GameTab = Window:CreateTab("Game", "crosshair")
+GameTab:CreateSection("Murder Mystery 2")
+
+local function getMurderer()
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr.Backpack:FindFirstChild("Knife") or (plr.Character and plr.Character:FindFirstChild("Knife")) then
+            return plr
+        end
+    end
+    return nil
+end
+
+local function getSheriff()
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun")) then
+            return plr
+        end
+    end
+    return nil
+end
+
+local function createESP(player, color)
+    if not player.Character then return end
+    local head = player.Character:FindFirstChild("Head")
+    if not head or head:FindFirstChild("ESP") then return end
+
+    local esp = Instance.new("BillboardGui", head)
+    esp.Name = "ESP"
+    esp.Size = UDim2.new(0, 100, 0, 40)
+    esp.AlwaysOnTop = true
+    esp.StudsOffset = Vector3.new(0, 2, 0)
+
+    local label = Instance.new("TextLabel", esp)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = player.Name
+    label.TextColor3 = color
+    label.TextScaled = true
+end
+
+local plr = game.Players.plr
+
+local function getPlayerRole()
+    local knife = plr.Backpack:FindFirstChild("Knife") or (plr.Character and plr.Character:FindFirstChild("Knife"))
+    local gun = plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun"))
+
+    if knife then
+        return "Murderer"
+    elseif gun then
+        return "Sheriff"
+    else
+        return "Innocent"
+    end
+end
+
+local RoleLabel = GameTab:CreateLabel("Your Role: Unknown")
+
+task.spawn(function()
+    while true do
+        local currentRole = getPlayerRole()
+        RoleLabel:Set("Your Role: " .. currentRole)
+        task.wait(1)
+    end
+end)
+
+GameTab:CreateDivider()
+
+local coinAutoCollect = false
+
+function getMap()
+    for _, o in ipairs(workspace:GetChildren()) do
+        if o:FindFirstChild("CoinContainer") and o:FindFirstChild("Spawns") then
+            return o
+        end
+    end
+    return nil
+end
+
+function getClosestModelToPlayer(player, models)
+    local closestModel = nil
+    local closestDistance = math.huge
+
+    local playerPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and
+    player.Character.HumanoidRootPart.Position
+    if not playerPosition then return nil end
+
+    for _, model in ipairs(models) do
+        local modelPosition = model:GetPivot().Position
+        local distance = (modelPosition - playerPosition).Magnitude
+        if distance < closestDistance then
+            closestDistance = distance
+            closestModel = model
+        end
+    end
+
+    local returningResult = { closestModel, closestDistance }
+    setmetatable(returningResult, {
+        __tostring = function(t)
+            return closestModel
+        end,
+    })
+
+    return returningResult
+end
+
+GameTab:CreateToggle({
+    Name = "Auto Collect Coins",
+    CurrentValue = false,
+    Callback = function(Value)
+        coinAutoCollect = Value
+        Rayfield:Notify({
+            Title = "Coin Auto Collect",
+            Content = Value and "Enabled" or "Disabled",
+            Duration = 3
+        })
+    end,
+})
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if not coinAutoCollect then continue end
+
+        local map = getMap()
+        if map and map:FindFirstChild("CoinContainer") then
+            local coins = map.CoinContainer:GetChildren()
+            if #coins > 0 then
+                local result = getClosestModelToPlayer(plr, coins)
+                local closestCoin = result[1]
+                local distance = result[2]
+
+                if closestCoin and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = plr.Character.HumanoidRootPart
+                    local tween = TweenService:Create(hrp, TweenInfo.new(distance * 0.05, Enum.EasingStyle.Linear), {
+                        CFrame = closestCoin:GetPivot()
+                    })
+                    tween:Play()
+                    tween.Completed:Wait()
+
+                    task.wait(0.1)
+                    pcall(function() closestCoin:Destroy() end)
+                end
+            end
+        end
+    end
+end)
+
+
+GameTab:CreateButton({
+    Name = "God Mode",
+    Callback = function()
+        local char = player.Character
+        if not char then return end
+        char:FindFirstChildOfClass("Humanoid").Name = "NotHumanoid"
+        wait(0.5)
+        local newHum = Instance.new("Humanoid", char)
+        newHum.HipHeight = 2
+        Rayfield:Notify({
+            Title = "God Mode",
+            Content = "Activated (may break on death)",
+            Duration = 4
+        })
+    end
+})
