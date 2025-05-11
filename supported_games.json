@@ -2,5 +2,8 @@
   "games": [{
     "name": "Lucky Blocks Battlegrounds",
     "placeId": 662417684
+  },{
+    "name": "Murder Mystery 2",
+    "placeId": "142823291"
   }]
 }
