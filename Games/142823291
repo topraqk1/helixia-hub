@@ -274,7 +274,7 @@ end)
 GameTab:CreateButton({
     Name = "God Mode",
     Callback = function()
-        local char = player.Character
+        local char = plr.Character
         if not char then return end
         char:FindFirstChildOfClass("Humanoid").Name = "NotHumanoid"
         wait(0.5)
