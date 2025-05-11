@@ -206,7 +206,7 @@ Sheriff: %s]], murdName, sherName)
     end
 end
 
-MainTab:CreateButton({
+GameTab:CreateButton({
     Name = "Send Role Info to Chat",
     Callback = function()
         sendRoleInfoToChannels()
@@ -217,7 +217,6 @@ MainTab:CreateButton({
         })
     end
 })
-
 
 GameTab:CreateDivider()
 
