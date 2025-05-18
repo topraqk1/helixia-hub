@@ -1,5 +1,5 @@
 # Installation
-```
+```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/topraqk1/helixia-hub/refs/heads/main/hub.lua"))()
 ```
 
